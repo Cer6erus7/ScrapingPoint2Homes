@@ -1,0 +1,1 @@
+class PagesEnd(Exception): pass

@@ -1,6 +1,7 @@
 import pprint
 import requests
 from bs4 import BeautifulSoup
+from mistakes import PagesEnd
 
 
 URL = "https://www.point2homes.com/CA/Apartments-For-Rent/BC.html"
@@ -13,10 +14,7 @@ def get_request(url, params=''):
     return requests.get(url, headers=HEADERS, params=params)
 
 
-def get_content(response):
-    soup = BeautifulSoup(response.text, "lxml")
-    cards = soup.find_all("div", class_="item-cnt")
-
+def get_content(cards):
     for card in cards:
         title = card.find('div', class_="address-container").text.strip()
 
@@ -52,7 +50,27 @@ def get_content(response):
         yield dct
 
 
+def main_scrap(pages):
+    page = 1
+    while True:
+        response = get_request(URL + f"?page={page}")
+        soup = BeautifulSoup(response.text, "lxml")
+        cards = soup.find_all("div", class_="item-cnt")
+
+        for info in get_content(cards):
+            yield info
+
+        if page == pages:
+            raise PagesEnd("All pages was scrapped")
+
+        page += 1
+
+
+
 if __name__ == '__main__':
-    response = get_request(URL)
-    for i in get_content(response):
+    number = 1
+    for i in main_scrap(2):
+        print(number)
         pprint.pprint(i)
+        print()
+        number += 1
